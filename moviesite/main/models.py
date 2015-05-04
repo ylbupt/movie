@@ -49,6 +49,8 @@ class Imdb(models.Model):
     votes = models.BigIntegerField(default=0) 
     box  = models.IntegerField(default=0)
     found_date = models.BigIntegerField()
+    def __unicode__(self):
+        return u'%s %s' % (self.mid, self.ename)
 
 class Link(models.Model):
     #mid = models.ForeignKey('Movie')

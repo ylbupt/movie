@@ -5,14 +5,18 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "moviesite.settings")
 from django.conf import settings
 from main.models import Movie,Link
 from alignment.models import LinkReview
-import django.db.utils
+import django.db.utils, django
+django.setup()
 def record_to_db(link, movie):
     try:
-        l = LinkReview(linkid=link, mid=movie)
-        l.save()
-        pass
-    except django.db.utils.IntegrityError, e:
-        print "linkid %d to mid %d exist %s" % (link.pk, movie.mid, e)
+        a_review = LinkReview.objects.get(linkid=link, mid=movie)
+    except LinkReview.DoesNotExist:
+        try:
+            l = LinkReview(linkid=link, mid=movie)
+            l.save()
+            pass
+        except django.db.utils.IntegrityError, e:
+            print "linkid %d to mid %d exist %s" % (link.pk, movie.mid, e)
 
 if __name__ == "__main__":
     succ_item = 0
