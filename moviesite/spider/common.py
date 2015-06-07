@@ -3,12 +3,15 @@ import time
 class Item:
     def __init__(self):
         self.id = ""
+        self.mid = ""
+        self.imdbid=""
         self.url =""
         self.raw = ""
         self.content =""
         self.pic_url=""
         self.cname=""
         self.ename=""
+        self.search_key=""
         self.aname=""
         self.actors=""
         self.channel=0
@@ -22,6 +25,7 @@ class Item:
         self.votes=0
         self.box=0
         self.error=0
+        self.quality = ""
         self.imdb_link=""
         self.comment_link=""
         self.summary=""

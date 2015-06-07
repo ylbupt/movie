@@ -15,13 +15,16 @@ sys.setdefaultencoding('utf8')
 homedir = os.getcwd()
 sys.path.append(homedir)
 os.environ['DJANGO_SETTINGS_MODULE'] = 'moviesite.settings'
-def get_title(url,title):
+import re
+def get_title(url,title,title2):
     ti = Title()
     ti.url = url
     ti.raw = title
     ti.cname = title.split("/")[0]
-    ti.ename = title.split("/")[1].split(".")[0]
+    ti.ename = title.split("/")[-1].split(".")[0]
     ti.year = title.split(".")[1]
+    ti.ename = ti.ename.replace('.','')
+    ti.ename = ".".join(filter(lambda x:x!="",ti.ename.split(' ')))
     return ti
 class bttiantang_handler(SiteHandler):
 
@@ -31,10 +34,10 @@ class bttiantang_handler(SiteHandler):
     def detail_parse_by_subclass(self,url,page):
 
         res =  self.parser.get_parse_data(url,page)
-        con = res['info']
         urllist=[]
         it = Item()
-        for li in con['list']:
+        for l in res['list']:
+            li = l['li']
             if "地区:" in li:
                 it.location = li.replace("地区:",'')
             if "年份:" in li:
@@ -44,8 +47,20 @@ class bttiantang_handler(SiteHandler):
             if "主演:" in li:
                 it.actors = li.replace("主演:",'')
             it.url = url
+        quality = {}
+        for tinfo in res['tinfo']:
+            qs = tinfo['quality']
+            if '720p' in qs:
+                quality['720p'] = 1
 
-        imdb_url = con['imdb']
+            if '1080p' in qs:
+                quality['1080p'] = 1
+
+            if 'CAM' in qs or 'TS' in qs:
+                quality['TS'] = 1
+        it.quality = '/'.join([ k for k,v in quality.items()])
+
+        imdb_url = res['imdb']
         if imdb_url != None and len(imdb_url) > 0:
             urllist.append("http://www.imdb.com/title/"+ imdb_url)
         return it ,urllist
@@ -53,14 +68,15 @@ class bttiantang_handler(SiteHandler):
         ss =  self.parser.get_parse_data(url,page,debug=False)
         mlist = []
         for data in ss['list']:
-            print data
-            if data['link'] == None or data['title']== None: 
+
+            if data['link'] == None or data['title']== None or data['title2'] == None: 
                 continue
+            title2 = data['title2']
             link =  "http://www.bttiantang.com"+data['link']
             title =  data['title']
             #title =  data['title'].encode("utf-8")
             #print link,title
-            t  = get_title(link,title)
+            t  = get_title(link,title,title2)
             if t !=None:
                 mlist.append(t)
                 if len(mlist)>15:

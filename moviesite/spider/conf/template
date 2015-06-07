@@ -1,6 +1,6 @@
 [
 {
-        "url": "http://banyungong.net/category/101.html",
+        "url": "http://banyungong.net/category",
                 "data": {
                         "list": {
                                 "path": "table[class=tableList]#1,a",
@@ -24,6 +24,12 @@
 {
         "url": "http://gaoqing.la/.*html",
                 "data": {
+                        "quality": {
+                            "path": "div[class=article_info],a",
+                            "item": {
+                                "path":"text"
+                            }
+                        },
                         "content": {
                                 "path": "div[id=post_content],text"
                                 }
@@ -48,24 +54,27 @@
         "url": "http://movie.douban.com/subject_search",
         "data": {
                 "list": {
-                        "path": "div[class=article],div[class=pl2]",
+                        "path": "div[class=article],tr[class=item]",
+                        "pic_url":{
+                            "path":"img,attr@src"
+                        },
                         "link":{
-                            "path":"a,attr@href"
+                            "path":"div[class=pl2],a,attr@href"
                         },
                         "info":{
-                            "path":"p[class=pl],text"
+                            "path":"div[class=pl2],p[class=pl],text"
                         },
                         "title":{
-                            "path":"a,text"
+                            "path":"div[class=pl2],a,text"
                         },
                         "span":{
-                            "path":"a,span,text"
+                            "path":"div[class=pl2],a,span,text"
                         },
                         "rate":{
-                            "path":"span[class=rating_nums],text"
+                            "path":"div[class=pl2],span[class=rating_nums],text"
                         },
                         "votes":{
-                            "path":"span[class=pl],text"
+                            "path":"div[class=pl2],span[class=pl],text"
                         }
 
 
@@ -127,6 +136,10 @@
         "data": {
                 "list": {
                         "path": "div[class='item cl']",
+                        "title2":{
+                            "path":"div[class=title],p#1,text"
+
+                        },
                         "link": {
                                 "path": "div[class=title],p[class='tt cl'],a#0,attr@href"
                         },
@@ -143,13 +156,22 @@
         "data": {
                 "list": {
                         "path": "ul[class=moviedteail_list],li",
-                        "imdb":{
-                        "path":"a[title=imdb],text"
-                        },
                         "li":{
                             "path":"text"
                         }
-                }
+                },
+                "tinfo": {
+                        "path":"div[class=tinfo]",
+                        "quality":{
+                            "path":"p[class=torrent],text"
+
+                        }
+
+                },
+                "imdb":{
+                                "path":"a[title=imdb],text"
+                        }
+
 
                 }
 }

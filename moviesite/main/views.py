@@ -1,9 +1,10 @@
-# -*- coding:utf-8 -*-
+# -*- coding:utf-8 -*
 import os
 import sys
 import datetime
 from django.shortcuts import render
-from main.models import Movie,Link
+from main.models import Movie,Link,Imdb
+from alignment.models import LinkReview
 from django.conf import settings
 sys.path.append(settings.SEARCH_API_DIR)  
 from sphinxapi import * 
@@ -94,19 +95,59 @@ def hello(request):
 
     links = Link.objects.filter(found_date__gte=found_date)
     movies = Movie.objects.filter(mid__in=[it.mid for it in links ])
-
     links = Link.objects.filter(mid__in=[it.mid for it in movies])
+    imdbs = Imdb.objects.filter(mid__in=[it.imdbid for it in links])
+    imdbmap = { it.mid:it for it in imdbs }
+    print imdbmap
+    linkidmidmap = { it.id:it.mid for it in links }
     for m in movies:
-#        m.pic_url = 'photos/pic/'+ str(m.mid) +'.jpg'
+        m.pic_url = 'pic/s/'+ str(m.mid) +'.jpg'
         m.links=[]
         m.found_date = 0
+        m.imdb_rate =0
+        imdbid =0
+        actors = []
+        alist  = m.actors.split('/')
+        for a in alist:
+            if len(a)>1:
+                actors.append(a)
+                if len(actors) ==3:
+                    break
+        m.actors = '/'.join(actors)
+
+        qualitymap = {}
+        have_default = False
         for link in links:
-            if link.mid == m.mid:
+            #if link.mid == m.mid:
+               
+            if linkidmidmap[link.id] == m.mid:
+                qlist = link.quality.split('/')
+                if len(qlist)>0:
+                    for q in qlist:
+                        key = q.strip()
+                        if 'default' in key:
+                            have_default = True
+                        else:
+                            qualitymap[key]=1
+
+                if link.imdbid !=0:
+                    imdbid = link.imdbid
+       
                 #rint link.mid,link.url,link.title
                 if link.found_date > m.found_date:
                     m.found_date = link.found_date
                 m.links.append(link)
+        if imdbid !=0 and imdbid in imdbmap:
+            print "imdbid",imdbid
+            m.imdb_rate = imdbmap[imdbid].rate
         #print m.mid,m.cname,len(links)
+        if have_default and '1080p' not in qualitymap:
+            qualitymap['1080p'] =1
+        qlist = [ k for k,v in qualitymap.items() ]
+        qlist.sort()
+        qualitystr = '/'.join(qlist)
+        m.quality = qualitystr
+
     mlist = [m for m in movies ]
     if rate :
         mlist.sort(key=lambda x:x.rate,reverse=True)
@@ -116,6 +157,7 @@ def hello(request):
         mlist.sort(key=lambda x:date_weight(x)*x.rate,reverse=True)
 #    for m in mlist:
 #        print m.cname,m.rate,m.date,date_weight(m),date_weight(m)*m.rate
+   
     context = {'mlist':mlist}
     return render(request, 'main/index.html', context)
 def type_filter(cc,type):
@@ -157,6 +199,8 @@ def content(request):
     search_key = unquote(search_key)
     print search_key
     movies = None
+    links = None
+    linkidmidmap = {}
     if len(search_key) >0:
         movies = get_search(search_key)
     else:
@@ -167,18 +211,60 @@ def content(request):
         movies = Movie.objects.filter(mid__in=[it.mid for it in links ])
 
     links = Link.objects.filter(mid__in=[it.mid for it in movies])
+    linkidmidmap = { it.id:it.mid for it in links }
+    imdbs = Imdb.objects.filter(mid__in=[it.imdbid for it in links])
+    imdbmap = { it.mid:it for it in imdbs }
+
     for m in movies:
-        #m.pic_url = 'photos/pic/'+ str(m.mid) +'.jpg'
+        m.pic_url = 'pic/s/'+ str(m.mid) +'.jpg'
         m.links=[]
         m.found_date = 0
+        m.imdb_rate =0
+        imdbid =0
+        actors = []
+        alist  = m.actors.split('/')
+        for a in alist:
+            if len(a)>1:
+                actors.append(a)
+                if len(actors) ==3:
+                    break
+        m.actors = '/'.join(actors)
+
+        qualitymap ={}
+        have_default = False
         for link in links:
-            if link.mid == m.mid:
+            #if link.mid == m.mid:
+               
+            if linkidmidmap[link.id] == m.mid:
+                qlist = link.quality.split('/')
+                if len(qlist)>0:
+                    for q in qlist:
+                        key = q.strip()
+                        if 'default' in key:
+                            have_default = True
+                        else:
+                            qualitymap[key]=1
+
+                if link.imdbid !=0:
+                    imdbid = link.imdbid
+       
                 #rint link.mid,link.url,link.title
                 if link.found_date > m.found_date:
                     m.found_date = link.found_date
-
                 m.links.append(link)
+        if imdbid !=0 and imdbid in imdbmap:
+            print "imdbid",imdbid
+            m.imdb_rate = imdbmap[imdbid].rate
         #print m.mid,m.cname,len(links)
+        if have_default and '1080p' not in qualitymap:
+            qualitymap['1080p'] =1
+        qlist = [ k for k,v in qualitymap.items() ]
+        qlist.sort()
+        qualitystr = '/'.join(qlist)
+        m.quality = qualitystr
+
+
+
     mlist = []
     if type!=None:
         for m in movies:
@@ -198,3 +284,40 @@ def content(request):
     context = {'mlist':mlist}
     print "xxxxxxxxxxx"
     return render(request, 'main/content.html', context)
+
+def detail(request):
+    url = request.path
+    print url
+    mmid = url.strip('/').split('/')[-1]
+    movid = int(mmid)
+    print "mmid",mmid
+    m = Movie.objects.get(mid=movid)
+    links = Link.objects.filter(mid__in=[m.mid])
+    linkidmidmap = { it.id:it.mid for it in links }
+    imdbs = Imdb.objects.filter(mid__in=[it.imdbid for it in links])
+    imdbmap = { it.mid:it for it in imdbs }
+    imdbid = 0
+    m.links = []
+
+    m.pic_url = 'pic/'+ str(m.mid) +'.jpg'
+    for link in links:
+            #if link.mid == m.mid:
+               
+        if linkidmidmap[link.id] == m.mid:
+            if link.imdbid !=0:
+                imdbid = link.imdbid
+   
+            #rint link.mid,link.url,link.title
+            if link.found_date > m.found_date:
+                m.found_date = link.found_date
+            m.links.append(link)
+
+        if imdbid !=0 and imdbid in imdbmap:
+            print "imdbid",imdbid
+            m.imdb_rate = imdbmap[imdbid].rate
+ 
+
+    context = {'movie':m}
+
+    return render(request, 'main/detail.html', context)
+

@@ -26,8 +26,17 @@ def update_link(linklist):
 
         it = Link()
         try:
-            it.mid = 0
+            if len(info.mid) >1 :
+                it.mid = int(info.mid)
+            else: 
+                it.mid = 0
+            if len(info.imdbid) >1:
+                it.imdbid = int(info.imdbid)
+            else:
+                it.imdbid = 0
             it.url = info.url
+            print "quality",info.quality
+            it.quality = info.quality
             it.urlmd5 = utils.get_md5_value(info.url) 
             it.cname = info.cname
             it.ename = info.ename
@@ -87,8 +96,6 @@ def update_douban(doubanlist):
             m.rate=0
             if len(it.rate)>0:
                 m.rate=int(float(it.rate)*10)
-            if m.rate ==0:
-                continue
             m.votes=0
             if len(it.votes)>0:
                 m.votes=int(it.votes)
@@ -190,7 +197,11 @@ if __name__ == "__main__":
     doubanurlmap = {}
     imdburlmap ={}
     for line in open(file,'r'):
-        urllist = line.strip().split('\t')
+        urllist = line.split('\t')
+        if len(urllist)< 8:
+            print '缺少字段'
+            continue
+        search_key = urllist[5]
         url = urllist[0]
         url = url.strip('/')
         if len(url)<3:
@@ -217,11 +228,13 @@ if __name__ == "__main__":
                     it,urls = handler.parse(url,page)
                     if it!=None:
                         if it.cname ==None or it.cname =="":
-                            if len(urllist) < 5:
-                                continue
                             it.cname = urllist[2]
                             it.ename = urllist[3]
                             it.date = urllist[4]
+                        it.mid = urllist[5]
+                        it.imdbid = urllist[6]
+                        if it.quality =="":
+                            it.quality = urllist[7]
                         it.raw = urllist[1]
                         detaillist.append(it)
                         for ur in urls:
