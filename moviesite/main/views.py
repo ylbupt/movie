@@ -28,9 +28,8 @@ def date_weight(m):
     else:
         return 0.1
     
-def get_search(key):
+def get_search(key, field):
     q = key
-    mode = SPH_MATCH_ALL
     host = '127.0.0.1'
     port = 9312
     index = '*'
@@ -43,6 +42,17 @@ def get_search(key):
 
     cl = SphinxClient()
     cl.SetServer ( host, port )
+    if field=='1':
+        mode = SPH_MATCH_ALL
+    elif field=='2':
+        mode = SPH_MATCH_EXTENDED
+        q = '@cname ' + q
+    elif field=='3':
+        mode = SPH_MATCH_EXTENDED
+        q = '@actors ' + q
+    elif field=='4':
+        mode = SPH_MATCH_EXTENDED
+        q = '@director ' + q
     cl.SetMatchMode ( mode )
     if filtervals:
         cl.SetFilter ( filtercol, filtervals )
@@ -197,12 +207,13 @@ def content(request):
 
     search_key = request.GET.get('search_key')
     search_key = unquote(search_key)
+    search_field = request.GET.get('field')
     print search_key
     movies = None
     links = None
     linkidmidmap = {}
     if len(search_key) >0:
-        movies = get_search(search_key)
+        movies = get_search(search_key, search_field)
     else:
         time = datetime.datetime.now() - datetime.timedelta(days=7)
         found_date = int(time.strftime('%Y'))*10000 +int(time.strftime('%m'))*100 +int(time.strftime('%d'))

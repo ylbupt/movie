@@ -43,7 +43,7 @@ Map.prototype.keySet = function() {
 }
 function  params_str()
 {
-        var str ="search_key="+ search_key + "&type=" +type +"&rate="+rate +"&date="+ date +"&found_date=" +found_date
+        var str ="search_key="+ search_key + "&type=" +type +"&rate="+rate +"&date="+ date +"&found_date=" +found_date+"&field="+search_selector
                 return str
 }
 $(document).ready(function(){
@@ -78,7 +78,9 @@ $(document).ready(function(){
 
                         });
                 $("button[id='search']").click(function(){
-                                search_key =       $('input[id=\'input_search\']').val(); 
+                                search_key =       $('#input_search').val(); 
+                                search_selector =       $('#selector_search').val(); 
+				//document.write(search_selector);
                                 $("#content").load(domain,params_str());
                                 });
 
@@ -92,6 +94,12 @@ $(document).ready(function(){
                         <div class="input-group">
                                 <input type="text" class="form-control" id="input_search" placeholder="Search for...">
                                 <span class="input-group-btn">
+					<select class="form-control" id="selector_search" style="width:180%;">
+						<option selected="selected" value="1">全部</option>
+						<option value="2">电影名</option>
+						<option value="3">演员</option>
+						<option value="4">导演</option>
+					</select>
                                         <button class="btn btn-default" id="search" type="button">Go!</button>
                                 </span>
                         </div><!-- /input-group -->
